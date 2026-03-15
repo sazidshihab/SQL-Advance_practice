@@ -192,6 +192,43 @@ create index id_order_date on orders(order_date);
 
 
 
+/*
+SECTION 6 — Data Integrity & Constraints
+Problem 12 (Medium)
+Modify the order_items table so that:
+quantity must be greater than 0
+order_id must reference orders table.
+Write the SQL constraints.
+*/
+
+alter table order_items
+add constraint cons_quantity 
+check(quantity>0);
+
+select * from information_schema.table_constraints, information_schema.check_constraints
+where table_name = 'order_items';
+
+
+
+/*
+SECTION 7 — Prepared Statements
+Problem 13 (Hard)
+Write a prepared statement that retrieves all orders for a given customer_id.
+Example call:
+EXECUTE get_orders(2);
+*/
+
+prepare get_orders  from '
+with cte as (
+select c.`name`, a.order_id, c.customer_id, d.product_name from order_items a left join orders b on a.order_id = b.order_id
+left join customer c on b.customer_id = c.customer_id left join products d on d.product_id = a.product_id)
+select `name`, order_id, product_name from cte where customer_id = ?'
+;
+set @id = 1;
+execute get_orders using @id;
+
+
+
 select * from products;
 select * from customer;
 select * from order_items;
