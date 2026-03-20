@@ -219,18 +219,149 @@ EXECUTE get_orders(2);
 */
 
 prepare get_orders  from '
-with cte as (
-select c.`name`, a.order_id, c.customer_id, d.product_name from order_items a left join orders b on a.order_id = b.order_id
-left join customer c on b.customer_id = c.customer_id left join products d on d.product_id = a.product_id)
-select `name`, order_id, product_name from cte where customer_id = ?'
+select c.customer_id,c.`name`, a.order_id, d.product_name from order_items a left join orders b on a.order_id = b.order_id
+left join customer c on b.customer_id = c.customer_id left join products d on d.product_id = a.product_id
+where b.customer_id = ?'
 ;
 set @id = 1;
 execute get_orders using @id;
 
 
 
-select * from products;
-select * from customer;
-select * from order_items;
-select * from orders;
+/*
+Problem 14
+Find customers who purchased in two consecutive months.
+*/
+
+with cte as(
+select b.order_date,c.customer_id,c.`name` from orders b left join  customer c on b.customer_id = c.customer_id ),
+cte1 as(
+ select `name`,date_format(order_date,'%Y-%m') as order_date, lag(date_format(order_date,'%Y-%m'),1) over(partition by customer_id order by order_date) as previous from cte),
+ cte2 as(
+ select `name` ,( case 
+ when date_format(date_add(concat(previous, '-01'), interval 1 month),'%Y-%m') =  order_date then 1 else 0 end
+ ) as consecutive from cte1 )
+ select  distinct `name` from cte2 where consecutive = 1;
+
+
+/*
+Problem 15
+Find the top 2 highest revenue customers in each city using window functions.
+*/
+
+with cte as(
+select c.city,c.`name`, sum( d.price*a.quantity) as price, c.customer_id from order_items a left join orders b on a.order_id = b.order_id 
+left join customer c on c.customer_id = b.customer_id join products d on d.product_id = a.product_id 
+group by 1,2,4), cte1 as(
+select *, row_number() over(partition by city order by price desc ) as rankk from cte)
+select city, `name`, price from cte1 where rankk between 1 and 2
+;
+
+
+/*
+Practice created from GPT ends here!!!!
+*/
+
+
+
+
+
+/*
+*************************************************************************************************************************
+Problem from Hackerrank advance: https://www.hackerrank.com/challenges/15-days-of-learning-sql/problem?isFullScreen=true
+Creating table and solving
+*************************************************************************************************************************
+*/
+
+
+create database hacker_rank_15days;
+
+use  hacker_rank_15days;
+
+create table Hackers (
+hacker_id INT PRIMARY KEY,
+    `name` VARCHAR(50)
+);
+
+
+create table Submissions (
+submission_date date,
+submission_id int,
+hacker_id  int,
+score int,
+foreign key Submission(hacker_id) references hackers(hacker_id)
+);
+
+
+insert into Hackers values
+(20706,'sazid')
+;
+
+insert into Submissions values
+('2016-03-03',66,20706,100),
+('2016-03-04',67,20706,80),
+('2016-03-05',68,20706,90),
+('2016-03-06',69,20706,95)
+;
+
+
+
+/*
+Solution with using window function.
+*/
+with cte1 as(
+select  hacker_id,submission_date, count(*) as submitted, lag(submission_date,1) over(partition by hacker_id order by submission_date) as pkk from Submissions group by 1,2 order by 1
+),
+
+cte3 as (
+select hacker_id, submission_date, submitted, sum(
+case 
+when submission_date = date_add(pkk,interval 1 day)  then 1 else 0 end) over(partition by hacker_id order by submission_date) as checkk from cte1 
+),
+
+valid as(
+select  a.submission_date,a.hacker_id,c.`name` , 
+datediff(submission_date,'2016-03-01') as date_diff  
+, checkk , a.submitted, rank() over(partition by a.submission_date order by a.submitted , a.hacker_id desc) as topper
+from cte3 a join  Hackers c 
+on c.hacker_id = a.hacker_id
+ order by 1,7 desc
+ ), 
+ 
+ cte2 as(
+select submission_date, sum(
+case when date_diff = checkk then 1 else 0 end
+) over(partition by submission_date) as total_hacker, hacker_id, `name` , topper, max(topper) over(partition by submission_date) as maxx
+from valid 
+), cte as(
+select submission_date, total_hacker, hacker_id, `name` from cte2 where topper = maxx)
+select * from cte
+;
+
+
+/*
+
+*/
+
+
+
+
+
+select * from Hackers;
+select * from Submissions;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
