@@ -1,3 +1,9 @@
+/*
+## Problem link: https://platform.stratascratch.com/coding/10564-product-engagement-momentum-shifts?code_type=3
+*/
+
+
+
 create database product_engagement_advance;
 use product_engagement_advance;
 create table product_engagement(
