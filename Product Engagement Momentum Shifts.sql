@@ -246,7 +246,7 @@ from peak_lower),
 
     
 final as(
-select product_name,decline_start,growth_resumed, (peak_point-lower_point)/lower_point as ratio
+select product_name,decline_start,date_add(growth_resumed, interval 1 month) as growth_resumed, (peak_point-lower_point)/lower_point as ratio
 from pre_final where valid=1)
 
     
