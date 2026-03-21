@@ -13,7 +13,7 @@ month_start date,
 monthly_active_users int
 );
 
-drop table product_engagement;
+/*drop table product_engagement; */
 
 insert into product_engagement values
 (1,'TikTok Lite','2023-05-01',63000),
