@@ -176,12 +176,12 @@ and
 lead(monthly_active_users,6)over(partition by product_name order by month_start) > lead(monthly_active_users,5)over(partition by product_name order by month_start)
 and
 timestampdiff(month,month_start,lead(month_start,6)over(partition by product_name order by month_start)) = 6
-
 then 1 else 0 end
 ) as valid
 from product_engagement
 ), 
 
+    
 minimum_seq_1 as(
 select product_name, month_start, monthly_active_users,
 (case
@@ -193,9 +193,10 @@ when valid =1 then lead(month_start,6)over(partition by product_name order by mo
 (case
 when valid =1 then month_start else 0 end
 )as bound_start,
-
 valid from minimum_seq
 ), 
+
+    
 set_boundaries as(
 select product_name, month_start, monthly_active_users, 
 case  when growth_resumed=0 then max(growth_resumed)over(partition by product_name order by month_start rows between unbounded preceding
@@ -204,42 +205,51 @@ max(upper_date_might)over(partition by product_name order by month_start) as upp
 max(bound_start)over(partition by product_name order by month_start) as bound_start,
 valid from minimum_seq_1
 ), 
+
+    
 set_boundaries_1 as(
 select product_name, month_start, monthly_active_users, growth_resumed,upper_date_might,
 (case when bound_start=0  and timestampdiff(month,month_start, lead(month_start,1)over(partition by product_name order by month_start))=1 
     then (case when monthly_active_users>lead(monthly_active_users,1)over(PARTITION BY product_name ORDER BY month_start
    ) then 0 else 1 end)
-    else null end)
-as decline_start
-,case when upper_date_might!=0 and month_start>=upper_date_might 
+    else null end) as decline_start,
+(case when upper_date_might!=0 and month_start>=upper_date_might 
 then case when
-timestampdiff(month,month_start, lead(month_start,1)over(partition by product_name order by month_start))=1 
-then monthly_active_users else monthly_active_users end 
-else 0 end as max_price,
-valid
+ timestampdiff(month,month_start, lead(month_start,1)over(partition by product_name order by month_start))=1 
+ then monthly_active_users else monthly_active_users end 
+else 0 end) as max_price, valid
 from set_boundaries
 ),
+
+    
 set_boundaries_2 as(
 select product_name, month_start, monthly_active_users, growth_resumed,upper_date_might,
 (case when max(decline_start)over(partition by product_name order by month_start rows between current row and unbounded following )=0 and upper_date_might =0
-then month_start else '2030-01-01' end
-) as decline_month,
-max_price,  valid 
+then month_start else '2030-01-01' end) as decline_month, max_price,  valid 
 from set_boundaries_1
-), peak_lower as(
+),
+
+    
+peak_lower as(
 select product_name, month_start, monthly_active_users, growth_resumed, min(decline_month)over(partition by product_name ) as decline_start,
 max(max_price)over(partition by product_name,growth_resumed ) as peak_point, 
 case when month_start=growth_resumed then monthly_active_users else 0 end as lower_point, valid
 from set_boundaries_2
-), pre_final as(
+),
+
+    
+pre_final as(
 select product_name, 
 case when month_start>decline_start then decline_start else month_start end  as decline_start, 
-growth_resumed, peak_point, max(lower_point)over(partition by product_name,growth_resumed) as lower_point,
-valid
+growth_resumed, peak_point, max(lower_point)over(partition by product_name,growth_resumed) as lower_point, valid 
 from peak_lower),
- final as(
+
+    
+final as(
 select product_name,decline_start,growth_resumed, (peak_point-lower_point)/lower_point as ratio
 from pre_final where valid=1)
+
+    
 select * from final;
 ;
 
