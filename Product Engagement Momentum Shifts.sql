@@ -146,7 +146,62 @@ insert into product_engagement values
 (1, 'A', '2024-05-01', 70),  
 (1, 'A', '2024-06-01', 75),
 (1, 'A', '2024-07-01', 85),
-(1, 'A', '2024-08-01', 95);
+(1, 'A', '2024-08-01', 95),
+
+(100, 'Hard Case', '2024-01-01', 100),
+(100, 'Hard Case', '2024-02-01', 95),
+(100, 'Hard Case', '2024-03-01', 90),
+(100, 'Hard Case', '2024-04-01', 85),
+(100, 'Hard Case', '2024-05-01', 80),   -- 5 declines
+
+(100, 'Hard Case', '2024-06-01', 82),   -- growth starts
+(100, 'Hard Case', '2024-07-01', 84),
+(100, 'Hard Case', '2024-08-01', 86),
+
+-- small dip inside growth
+(100, 'Hard Case', '2024-09-01', 83),   -- breaks monotonicity
+
+-- then strong growth again
+(100, 'Hard Case', '2024-10-01', 90),
+(100, 'Hard Case', '2024-11-01', 100),
+(100, 'Hard Case', '2024-12-01', 110),
+
+
+
+(200, 'Shifted Case', '2024-01-01', 100),
+(200, 'Shifted Case', '2024-02-01', 95),
+(200, 'Shifted Case', '2024-03-01', 90),
+(200, 'Shifted Case', '2024-04-01', 85),
+(200, 'Shifted Case', '2024-05-01', 80),  -- long decline
+
+-- tiny delay before growth becomes consistent
+(200, 'Shifted Case', '2024-06-01', 81),  -- small up
+(200, 'Shifted Case', '2024-07-01', 80),  -- small drop again ❗
+
+-- now real growth starts
+(200, 'Shifted Case', '2024-08-01', 82),
+(200, 'Shifted Case', '2024-09-01', 85),
+(200, 'Shifted Case', '2024-10-01', 90),
+(200, 'Shifted Case', '2024-11-01', 100),
+(200, 'Shifted Case', '2024-12-01', 110),
+
+
+
+
+(300, 'True Edge', '2024-01-01', 100),
+(300, 'True Edge', '2024-02-01', 95),
+(300, 'True Edge', '2024-03-01', 90),
+(300, 'True Edge', '2024-04-01', 85),
+(300, 'True Edge', '2024-05-01', 80),
+
+(300, 'True Edge', '2024-06-01', 82),
+(300, 'True Edge', '2024-07-01', 84),
+(300, 'True Edge', '2024-08-01', 86),
+
+(300, 'True Edge', '2024-09-01', 88),
+(300, 'True Edge', '2024-10-01', 90),
+(300, 'True Edge', '2024-11-01', 92);
+
 /*
 (1, 'A', '2024-09-01', 60),
 (1, 'A', '2024-10-01', 65),
@@ -243,10 +298,15 @@ select product_name,
 case when month_start>decline_start then decline_start else month_start end  as decline_start, 
 growth_resumed, peak_point, max(lower_point)over(partition by product_name,growth_resumed) as lower_point, valid 
 from peak_lower),
+<<<<<<< HEAD
+ final as(
+select product_name,decline_start ,date_add(growth_resumed,interval 1 month)as growth_resumed , (peak_point-lower_point)/lower_point as ratio
+=======
 
     
 final as(
 select product_name,decline_start,growth_resumed, (peak_point-lower_point)/lower_point as ratio
+>>>>>>> 3c4e35580188a6aaeab362426266edaf7b45e5ba
 from pre_final where valid=1)
 
     
