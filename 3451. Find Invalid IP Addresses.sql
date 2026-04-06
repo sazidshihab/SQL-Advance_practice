@@ -40,14 +40,11 @@ select 1 as val,log_id, trim(substring_index(ip,'.',1)) as first_ , substr(ip,le
 union all
 select val+1, log_id, trim(substring_index(second_,'.',1)) as first_, substr(second_,length(substring_index(second_,'.',1))+2) as second_  from cte 
 where second_ <> ''
-),
-cte1 as(
-select val,log_id, first_ as data_  from cte
-order by log_id
 ), 
 check_ as(
 
-    select log_id, val, data_, case when cast(data_ as unsigned)>255 or left(data_,1)='0' or count(log_id)over(partition by log_id)!=4 then 1 else 0 end as flag_ from cte1 
+    select log_id, val, first_ as data_, case when cast(first_ as unsigned)>255 or left(first_,1)='0' or
+     count(log_id)over(partition by log_id)!=4 then 1 else 0 end as flag_ from cte 
 ),
  cte_final as(
  select replace(GROUP_CONCAT(data_ order by log_id,val),',','.' ) as ip from check_

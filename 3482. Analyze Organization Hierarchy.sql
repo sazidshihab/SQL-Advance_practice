@@ -86,10 +86,17 @@ from Employees a
 left join cte1 b on a.employee_id=b.manager left join cte5 c on c.manager=a.employee_id
 order by 
 budget DESC
-)
+), cte_final as(
 select distinct  a.employee_id,c.employee_name, b.lev as level, a.team_size, a.budget 
 from cte2 a 
 left join cte b on a.employee_id=b.managed left join Employees c on c.employee_id=a.employee_id
 order by 
-level asc,budget desc,employee_name asc
+level asc,budget desc,employee_name asc)
+select * from cte;
 
+
+
+
+
+
+select * from Employees;
