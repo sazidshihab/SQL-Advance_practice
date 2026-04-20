@@ -1,4 +1,4 @@
-Welcome to my SQL practice finder. 
+# Welcome to my SQL practice finder. 
 Here I upload all the significant(Hard/Medium) SQL problems from
 1. LeetCode
 2. HackerRank
